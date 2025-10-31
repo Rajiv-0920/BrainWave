@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react'
 
 /**
  * useFetch - Custom hook to fetch data from an API endpoint
@@ -7,43 +7,43 @@ import { useState, useEffect } from "react";
  * @returns {Object} { data, error, loading }
  */
 function useFetch(url) {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [data, setData] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
   useEffect(() => {
-    if (!url) return;
+    if (!url) return
 
-    let isMounted = true; // to prevent state update on unmounted component
-    setLoading(true);
-    setError(null);
+    let isMounted = true // to prevent state update on unmounted component
+    setLoading(true)
+    setError(null)
 
     fetch(url)
       .then((response) => {
         if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
+          throw new Error(`HTTP error! Status: ${response.status}`)
         }
-        return response.json();
+        return response.json()
       })
       .then((json) => {
         if (isMounted) {
-          setData(json);
-          setLoading(false);
+          setData(json)
+          setLoading(false)
         }
       })
       .catch((err) => {
         if (isMounted) {
-          setError(err);
-          setLoading(false);
+          setError(err)
+          setLoading(false)
         }
-      });
+      })
 
     return () => {
-      isMounted = false; // cleanup to prevent memory leaks
-    };
-  }, [url]);
+      isMounted = false // cleanup to prevent memory leaks
+    }
+  }, [url])
 
-  return { data, loading, error };
+  return { data, loading, error }
 }
 
-export default useFetch;
+export default useFetch
