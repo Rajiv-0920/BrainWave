@@ -3,10 +3,9 @@ import CourseCardSkeleton from '../components/CourseCardSkeleton'
 import useFetch from '../hooks/useFetch'
 
 const Courses = () => {
-  const { data, loading, error } = useFetch('http://localhost:3000/api/courses')
+  const { data, loading } = useFetch('http://localhost:3000/api/courses')
   const courses = data?.data
   console.log(courses)
-
   return (
     <section className='py-16 bg-gray-50'>
       <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
@@ -22,13 +21,7 @@ const Courses = () => {
                 <CourseCardSkeleton key={i} />
               ))
             : courses?.map((course, index) => (
-                <CourseCard
-                  key={index}
-                  id={course._id}
-                  title={course.title}
-                  description={course.subtitle}
-                  imageUrl={course.thumbnailUrl}
-                />
+                <CourseCard key={index} id={course._id} {...course} />
               ))}
         </div>
       </div>

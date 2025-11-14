@@ -1,100 +1,8 @@
-import React, { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import React, { useState } from 'react'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import useFetch from '../hooks/useFetch'
-
-const courseData = {
-  title: 'AI Ethics and Responsible Innovation',
-  subtitle:
-    'Understand the ethical, social, and legal implications of artificial intelligence and learn to design responsible AI systems.',
-  instructor: {
-    name: 'Dr. Hannah Lee',
-    bio: 'Ethicist and AI Policy Researcher with 15+ years of experience in technology governance, responsible AI, and human-centered design.',
-  },
-  category: 'Artificial Intelligence',
-  level: 'Intermediate',
-  language: 'English',
-  tags: [
-    'AI Ethics',
-    'Responsible AI',
-    'Policy',
-    'Data Privacy',
-    'AI Governance',
-  ],
-  price: {
-    amount: 59.99,
-    currency: 'USD',
-  },
-  thumbnailUrl: 'https://placehold.co/600x400/7B6EF6/FFFFFF?text=AI+Ethics',
-  estimatedDuration: '12 hours',
-  modules: [
-    {
-      title: 'Module 1: Foundations of AI Ethics',
-      order: 1,
-      lessons: [
-        {
-          title: 'Why Ethics Matters in AI',
-          order: 1,
-          type: 'video',
-          duration: 1100,
-          videoUrl: 'https://cdn.example.com/videos/c010/l101.mp4',
-          isPreviewable: true,
-          resources: [],
-        },
-        {
-          title: 'Ethical Frameworks for AI Decision-Making',
-          order: 2,
-          type: 'text',
-          duration: 600,
-          content:
-            '<h1>Ethical Frameworks</h1><p>Explore key ethical approaches including utilitarianism, deontology, and virtue ethics in the context of AI design and deployment.</p>',
-          isPreviewable: false,
-          resources: [
-            {
-              title: 'Ethical Frameworks Summary.pdf',
-              url: '/resources/ethical-frameworks-summary.pdf',
-            },
-          ],
-        },
-      ],
-    },
-    {
-      title: 'Module 2: Building Responsible AI Systems',
-      order: 2,
-      lessons: [
-        {
-          title: 'Bias, Fairness, and Transparency in AI',
-          order: 1,
-          type: 'video',
-          duration: 1600,
-          videoUrl: 'https://cdn.example.com/videos/c010/l201.mp4',
-          isPreviewable: false,
-          resources: [
-            {
-              title: 'AI Fairness Checklist.pdf',
-              url: '/resources/ai-fairness-checklist.pdf',
-            },
-          ],
-        },
-        {
-          title: 'AI Governance and Global Regulations',
-          order: 2,
-          type: 'video',
-          duration: 1800,
-          videoUrl: 'https://cdn.example.com/videos/c010/l202.mp4',
-          isPreviewable: false,
-          resources: [],
-        },
-      ],
-    },
-  ],
-}
-
-const formatDuration = (seconds) => {
-  if (seconds < 60) return `${seconds}s`
-  const minutes = Math.floor(seconds / 60)
-  const remainingSeconds = seconds % 60
-  return `${minutes}m ${remainingSeconds > 0 ? `${remainingSeconds}s` : ''}`
-}
+import { formatDuration } from '../lib/utils'
+import { useAuth } from '../context/AuthContext'
 
 const LessonItem = ({ lesson }) => (
   <div className='flex justify-between items-center py-3 px-4 hover:bg-gray-50 rounded-md'>
@@ -138,7 +46,9 @@ const LessonItem = ({ lesson }) => (
     </div>
     <div className='flex items-center space-x-4'>
       {lesson.isPreviewable && (
-        <span className='text-sm text-indigo-600 font-semibold'>Preview</span>
+        <>
+          <span className='text-sm text-indigo-600 font-semibold'>Preview</span>
+        </>
       )}
       <span className='text-sm text-gray-500'>
         {formatDuration(lesson.duration)}
@@ -186,9 +96,42 @@ const ModuleAccordion = ({ module, index }) => {
 
 const CourseDetailPage = () => {
   const { courseId } = useParams()
+  const navigate = useNavigate()
+
   const { data, loading, error } = useFetch(
     `http://localhost:3000/api/courses/${courseId}`
   )
+  const { isAuthenticated } = useAuth()
+  const [enrolledText, setEnrolledText] = useState('Enroll Now')
+
+  const enrollInCourse = async (courseId) => {
+    try {
+      if (!isAuthenticated) return
+      const response = await fetch(`http://localhost:3000/api/enroll`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          courseId: courseId,
+        }),
+      })
+
+      console.log(response)
+
+      if (!response.ok) {
+        throw new Error('Enrollment failed.')
+      }
+
+      const data = await response.json()
+      console.log('Enrollment successful:', data.message)
+      setEnrolledText('Enrolled')
+      navigate('/enrolled-courses')
+    } catch (error) {
+      console.error('Error during enrollment:', error)
+    }
+  }
 
   // 1. Handle Loading State
   if (loading) {
@@ -295,9 +238,22 @@ const CourseDetailPage = () => {
                 <p className='text-3xl font-bold text-gray-800 mb-4'>
                   ${data.data.price.amount}
                 </p>
-                <button className='w-full bg-indigo-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-indigo-700 transition-colors duration-300'>
-                  Enroll Now
-                </button>
+                {isAuthenticated ? (
+                  <button
+                    onClick={() => enrollInCourse(courseId)}
+                    className='block text-center w-full bg-indigo-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-indigo-700 transition-colors duration-300'
+                  >
+                    {enrolledText}
+                  </button>
+                ) : (
+                  // ❌ CASE 2: USER IS NOT AUTHENTICATED
+                  <Link
+                    to='/signup'
+                    className='block text-center w-full bg-indigo-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-indigo-700 transition-colors duration-300'
+                  >
+                    Sign Up / Log In to Enroll
+                  </Link>
+                )}
                 <div className='mt-6'>
                   <h4 className='font-bold text-gray-700 mb-3'>
                     This course includes:

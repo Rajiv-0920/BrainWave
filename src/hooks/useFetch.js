@@ -3,25 +3,41 @@ import { useState, useEffect } from 'react'
 /**
  * useFetch - Custom hook to fetch data from an API endpoint
  * @param {string} url - The API endpoint
- * @param {Array} deps - Optional dependency array for re-fetching
+ * @param {Object} [options={}] - Optional fetch configuration object (method, headers, body, credentials, etc.).
+ * Defaults to a simple GET request if not provided.
+ * @param {Array} [deps=[]] - Optional dependency array for re-fetching (defaulting to url)
  * @returns {Object} { data, error, loading }
  */
-function useFetch(url) {
+
+function useFetch(url, options = {}) {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  useEffect(() => {
-    if (!url) return
+  // Combine URL and stringified options into dependencies to trigger effect on change
+  const optionsString = JSON.stringify(options)
 
-    let isMounted = true // to prevent state update on unmounted component
+  useEffect(() => {
+    if (!url) {
+      setLoading(false)
+      return
+    }
+
+    let isMounted = true
     setLoading(true)
     setError(null)
 
-    fetch(url)
+    // Parse optionsString back into an object
+    const currentOptions = JSON.parse(optionsString)
+
+    // 💡 Fetch call now uses the provided options
+    fetch(url, currentOptions)
       .then((response) => {
         if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`)
+          // Throw the error with the response object for better debugging
+          throw new Error(
+            `HTTP error! Status: ${response.status} - ${response.statusText}`
+          )
         }
         return response.json()
       })
@@ -33,7 +49,8 @@ function useFetch(url) {
       })
       .catch((err) => {
         if (isMounted) {
-          setError(err)
+          console.error('useFetch error:', err)
+          setError(err.message)
           setLoading(false)
         }
       })
@@ -41,7 +58,7 @@ function useFetch(url) {
     return () => {
       isMounted = false // cleanup to prevent memory leaks
     }
-  }, [url])
+  }, [url, optionsString]) // Hook re-runs when URL or options change
 
   return { data, loading, error }
 }

@@ -1,4 +1,4 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose, { Schema } from 'mongoose'
 
 // Sub-schema for downloadable resources in a lesson
 const ResourceSchema = new Schema({
@@ -10,7 +10,7 @@ const ResourceSchema = new Schema({
     type: String,
     required: true,
   },
-});
+})
 
 // Sub-schema for quiz questions
 const QuestionSchema = new Schema({
@@ -26,7 +26,7 @@ const QuestionSchema = new Schema({
     type: String,
     required: true,
   },
-});
+})
 
 // Sub-schema for individual lessons within a module
 const LessonSchema = new Schema({
@@ -40,7 +40,7 @@ const LessonSchema = new Schema({
   },
   type: {
     type: String,
-    enum: ["video", "text", "quiz"], // Restrict to specific lesson types
+    enum: ['video', 'text', 'quiz'], // Restrict to specific lesson types
     required: true,
   },
   duration: {
@@ -58,7 +58,7 @@ const LessonSchema = new Schema({
   },
   resources: [ResourceSchema],
   questions: [QuestionSchema], // Only for 'quiz' type
-});
+})
 
 // Sub-schema for course modules
 const ModuleSchema = new Schema({
@@ -71,14 +71,14 @@ const ModuleSchema = new Schema({
     required: true,
   },
   lessons: [LessonSchema],
-});
+})
 
 // Main Course Schema
 const CourseSchema = new Schema(
   {
     title: {
       type: String,
-      required: [true, "Course title is required"],
+      required: [true, 'Course title is required'],
       trim: true,
     },
     subtitle: {
@@ -96,7 +96,7 @@ const CourseSchema = new Schema(
     },
     level: {
       type: String,
-      enum: ["Beginner", "Intermediate", "Advanced", "All Levels"],
+      enum: ['Beginner', 'Intermediate', 'Advanced', 'All Levels'],
       required: true,
     },
     language: {
@@ -106,7 +106,7 @@ const CourseSchema = new Schema(
     tags: [String],
     price: {
       amount: { type: Number, required: true },
-      currency: { type: String, required: true, default: "USD" },
+      currency: { type: String, required: true, default: 'USD' },
     },
     thumbnailUrl: {
       type: String,
@@ -124,7 +124,9 @@ const CourseSchema = new Schema(
   {
     // Mongoose automatically adds createdAt and updatedAt fields
     timestamps: true,
+    collection: 'courses', // ⬅️ FORCE THE COLLECTION NAME
   }
-);
+)
 
-export const Course = mongoose.model("Course", CourseSchema);
+const Course = mongoose.model('Course', CourseSchema)
+export default Course
